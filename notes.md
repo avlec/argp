@@ -1,5 +1,7 @@
 #Notes to Programmer.
-    
+
+Use `const char(&a)[N]` for string literal templates.
+
 Adding support for multiple signifiers to mean and reference the same thing.
 - const char** signifiers in the create_argument functions as overrides?
 - argument class to use a 3rd vector ;(
