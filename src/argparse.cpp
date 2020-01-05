@@ -65,11 +65,19 @@ namespace argparse {
 	};
 }
 
+constexpr int test_cexpr(std::initializer_list<const char*> x)
+{
+	return (int) (*x.begin())[0];
+}
+
 int main()
 {
     argparse::parser parser;
     parser.create_argument({"-c", "-v"}, 0, {});
-    
+  
+	constexpr int x = test_cexpr({"FUCK"});	
+
+
   //  parser.print_arguments();
 }
 
