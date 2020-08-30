@@ -1,83 +1,39 @@
-// Example program
-#include <iostream>
-#include <string>
-#include <cassert>
-#include <array>
-#include <string_view>
+#include "../include/argparse.hpp"
 
-namespace argparse {
-    
-    class parser { 
-    public:
-        template <unsigned int size>
-		struct argument {
-            const char* signifier;
-            std::array<std::string_view, size> results;
-
-			argument(const char* signifier_)
-			: signifier(signifier_)
-			{
-			}
-
-			void set_defaults(std::initializer_list<const char*> defaults)
-			{
-				switch(defaults.size())
-				{
-					case size:
-						// Copy 1 to 1
-						break;
-					case 1:
-						// Copy element sup_c times into results.
-						break;
-					default:
-						[[unlikely]] throw std::invalid_argument("defaults of illegal length provided");
-					case 0:
-						break;
-				}
-			}
-        };
-        
-    private:
-        argument registered_arguments_;
-    
-    public:
-        parser() = default;
-    
-        /* Configuration. */
-        // default values must be provided for each supplemental argument.
-        void create_argument(std::initializer_list<const char*> signifiers, const unsigned int sup_c, std::initializer_list<const char*> defaults)
-		{
-//			registered_arguments_.emplace_back(signifiers[0], sup_c);
-
-	//		if (defaults != nullptr)
-	//			(registered_arguments_.back()).set_defaults(defaults);
-		}
-
-        /* Actual work. */
-
-        bool operator()(char ** args);
-    	
-		void print_arguments()
-		{
-	//		for(auto& arg: registered_arguments_)
-	//			std::cout << arg.signifier << "," << arg.sup_c << std::endl;
-		}
-	};
+// Simple example for how inplace conversions are supposed to be used.
+struct custom_type {
+  const char* s;
+};
+void s_to_custom_type(const char* value, void* storage_location) {
+  static_cast<custom_type*>(storage_location)->s = value;
 }
 
-constexpr int test_cexpr(std::initializer_list<const char*> x)
-{
-	return (int) (*x.begin())[0];
+// Some cooler things this enables is building in more complicated things like
+// in this example converting the argument into a file handle for read/write ops.
+void arg_to_file_ptr(const char* value, void* location) {
+  *static_cast<FILE**>(location) = fopen(value, "rw");
 }
 
-int main()
-{
-    argparse::parser parser;
-    parser.create_argument({"-c", "-v"}, 0, {});
-  
-	constexpr int x = test_cexpr({"FUCK"});	
-
-
-  //  parser.print_arguments();
+void arg_to_set_bool(const char* value, void* location) {
+  if (value != argparse::no_value)
+    *static_cast<bool*>(location) = true;
 }
 
+int main(int argc, char** argv) {
+/*  argparse::parser parser =
+  {
+  { "-c", argparse::argument_type::no_param, "specifies the target is to be compiled but not linked." },
+  { "-o", argparse::argument_type::single, "specifies the output file",  }
+  };
+  parser.parse(argc, argv);
+*/
+  FILE* yehaw = nullptr;
+  bool c = false;
+  std::cout << yehaw;
+  // Note, no_param arguments must not be given a default value.
+  argparse::argument a1 { "-c", argparse::argument::no_param, arg_to_set_bool, &c };
+  argparse::argument a { "-o", argparse::argument::single_param, "test.txt", arg_to_file_ptr, &yehaw };
+  a.set_value("test.txt");
+  a.attempt_conversion();
+  std::cout << " ... " << static_cast<char>(fgetc(yehaw)) << std::endl;
+}
