@@ -8,6 +8,8 @@
 #include <iostream>
 
 #include <optional>
+#include <functional>
+#include <new>
 
 namespace argparse {
 
@@ -52,8 +54,40 @@ namespace argparse {
       this->value = new_value;
       this->attempt_conversion();
     }
-
   };
+
+  // Refactored arg class
+  class arg {
+    using string = const char*;
+    using binary = bool;
+
+    std::optional<string> signifier;
+    std::optional<string> value;
+    binary flag = false;
+
+    template <class T>
+    static void* default_conversion(string value, void* storage) {
+      return ::new (storage) T(value);
+    }
+
+    std::optional<std::function<void*(string, void*)>> conversion_function;
+    std::optional<void*> storage;
+
+    arg(string s, string default_v)
+      : signifier{s}, value{default_v}, conversion_function{}, storage{} {}
+
+    template <class T>
+    arg(string s, string default_v, void* str, std::function<void*(string, void*)> conv_func = default_conversion<T>)
+      : signifier{s}, value{default_v}, conversion_function{conv_func}, storage{str} {}
+
+    // If provided converstion_function and storage, will use conversion_function with storage.
+    void convert() noexcept(true) {
+      if(conversion_function.has_value() && storage.has_value())
+        (this->conversion_function.value())(this->value, this->storage_location.value());
+
+    }
+  };
+
 
   class parser {
 
