@@ -11,7 +11,7 @@
 #include <functional>
 #include <new>
 
-namespace argparse {
+namespace argp {
 
   constexpr const char* no_value = nullptr;
   constexpr const char* flag_set = "";
@@ -89,6 +89,14 @@ namespace argparse {
   };
 
 
+  /*
+   * Ideas for parsing specification.
+   * Invocations might be more complex than a series of arguments then
+   * flags or vice versa.
+   *
+   * Parser provided with specification string.
+   * (i.e., "<option 1><flags><option 2...>")
+   */
   class parser {
 
     std::vector<argument> args;
