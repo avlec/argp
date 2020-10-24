@@ -56,6 +56,17 @@ namespace argp {
     }
   };
 
+
+
+
+
+  /*
+  ** Is the argument signaled by some predicated?
+  ** How many values is the argument expecting?
+  ** Is there a default value?
+  ** How is the value interpreted? (programmer)
+  **
+  */
   // Refactored arg class
   class arg {
     using string = const char*;
@@ -70,11 +81,12 @@ namespace argp {
       return ::new (storage) T(value);
     }
 
-    std::optional<std::function<void*(string, void*)>> conversion_function;
-    std::optional<void*> storage;
+    // void* return might be useful later. result for now is discarded.
+    std::function<void*(string, void*)> conversion_function;
+    void* storage;
 
     arg(string s, string default_v)
-      : signifier{s}, value{default_v}, conversion_function{}, storage{} {}
+      : signifier{s}, value{default_v}, conversion_function{nullptr}, storage{nullptr} {}
 
     template <class T>
     arg(string s, string default_v, void* str, std::function<void*(string, void*)> conv_func = default_conversion<T>)
@@ -82,9 +94,8 @@ namespace argp {
 
     // If provided converstion_function and storage, will use conversion_function with storage.
     void convert() noexcept(true) {
-      if(conversion_function.has_value() && storage.has_value())
-        (this->conversion_function.value())(this->value, this->storage_location.value());
-
+      if(conversion_function == nullptr && storage == nullptr)
+        conversion_function(this->value.value_or(""), this->storage);
     }
   };
 
